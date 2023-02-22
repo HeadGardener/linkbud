@@ -7,6 +7,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const (
+	UsersTable      = "users"
+	ListsTable      = "lists"
+	UsersListsTable = "users_lists"
+	LinksTable      = "links"
+	ListsLinksTable = "lists_links"
+)
+
 func NewDB(conf configs.DBConfig) (*sqlx.DB, error) {
 	db, err := sqlx.Open("postgres",
 		fmt.Sprintf("host=%s dbname=%s sslmode=%s", conf.Host, conf.DBName, conf.SSLMode))
