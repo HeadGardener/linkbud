@@ -1,10 +1,16 @@
 package models
 
-type LinkList struct {
+type List struct {
 	ID          int    `json:"-" db:"id"`
 	Title       string `json:"title" db:"title" binding:"required"`
-	ShortTitle  string `json:"-" db:"short_title"`
+	ShortTitle  string `json:"short_title" db:"short_title"`
 	Description string `json:"description" db:"description"`
+}
+
+type ListInput struct {
+	Title       *string `json:"title" db:"title" binding:"required"`
+	ShortTitle  string  `json:"short_title" db:"short_title"`
+	Description *string `json:"description" db:"description"`
 }
 
 type UsersList struct {

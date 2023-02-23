@@ -15,20 +15,72 @@ func NewListService(repos *repository.Repository) *ListService {
 	return &ListService{repos: repos}
 }
 
-func (s *ListService) Create(userID int, list models.LinkList) (int, error) {
-	if err := validateList(&list); err != nil {
+func (s *ListService) Create(userID int, listInput models.ListInput) (int, error) {
+	list := listFromInput(listInput)
+
+	if err := checkTitleLen(list.Title); err != nil {
 		return 0, err
 	}
+
+	list.ShortTitle = makeShortTitle(list.Title)
 
 	return s.repos.ListInterface.Create(userID, list)
 }
 
-func validateList(list *models.LinkList) error {
-	if len(list.Title) > 25 {
+func (s *ListService) GetAll(userID int) ([]models.List, error) {
+	return s.repos.ListInterface.GetAll(userID)
+}
+
+func (s *ListService) GetList(userID int, title string) (models.List, error) {
+	if err := checkTitleLen(title); err != nil {
+		return models.List{}, err
+	}
+
+	return s.repos.ListInterface.GetList(userID, title)
+}
+
+func (s *ListService) Update(userID int, title string, listInput models.ListInput) (int, error) {
+	if err := checkTitleLen(title); err != nil {
+		return 0, err
+	}
+
+	if err := checkTitleLen(*listInput.Title); err != nil {
+		return 0, err
+	}
+
+	listInput.ShortTitle = makeShortTitle(*listInput.Title)
+
+	return s.repos.ListInterface.Update(userID, title, listInput)
+}
+
+func (s *ListService) Delete(userID int, title string) (int, error) {
+	if err := checkTitleLen(title); err != nil {
+		return 0, err
+	}
+
+	return s.repos.ListInterface.Delete(userID, title)
+}
+
+func makeShortTitle(title string) string {
+	if len(title) > 25 {
+		return ""
+	}
+
+	return strings.Join(strings.Split(strings.TrimSpace(title), " "), "")
+}
+
+func checkTitleLen(title string) error {
+	if len(title) > 25 {
 		return errors.New("list title is too long")
 	}
 
-	list.ShortTitle = strings.Join(strings.Split(strings.TrimSpace(list.Title), " "), "")
-
 	return nil
+}
+
+func listFromInput(l models.ListInput) models.List {
+	var list models.List
+	list.Title = *l.Title
+	list.Description = *l.Description
+
+	return list
 }

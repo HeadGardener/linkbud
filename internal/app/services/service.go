@@ -15,7 +15,11 @@ type Authorization interface {
 }
 
 type ListInterface interface {
-	Create(userID int, list models.LinkList) (int, error)
+	Create(userID int, listInput models.ListInput) (int, error)
+	GetAll(userID int) ([]models.List, error)
+	GetList(userID int, title string) (models.List, error)
+	Update(userID int, title string, listInput models.ListInput) (int, error)
+	Delete(userID int, title string) (int, error)
 }
 
 type Service struct {
