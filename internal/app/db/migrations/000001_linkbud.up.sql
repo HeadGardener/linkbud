@@ -1,4 +1,4 @@
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
     id            serial       not null unique,
     name          varchar(255) not null,
@@ -6,7 +6,7 @@ CREATE TABLE users
     password_hash varchar(255) not null
 );
 
-CREATE TABLE lists
+CREATE TABLE IF NOT EXISTS lists
 (
     id          serial       not null unique,
     title       varchar(255) not null,
@@ -14,7 +14,7 @@ CREATE TABLE lists
     description varchar(255)
 );
 
-CREATE TABLE users_lists
+CREATE TABLE IF NOT EXISTS users_lists
 (
     id         serial                                      not null unique,
     user_id    int references users (id) on delete cascade not null,
@@ -22,16 +22,18 @@ CREATE TABLE users_lists
     list_title varchar                                     not null
 );
 
-CREATE TABLE links
+CREATE TABLE IF NOT EXISTS links
 (
-    id    serial       not null unique,
-    title varchar(255) not null,
-    url   varchar(255) not null
+    id          serial       not null unique,
+    title       varchar(255) not null,
+    short_title varchar(255) not null,
+    url         varchar(255) not null
 );
 
-CREATE TABLE lists_links
+CREATE TABLE IF NOT EXISTS lists_links
 (
-    id         serial  not null unique,
-    list_title varchar not null,
-    lnk_title  varchar not null
+    id         serial                                      not null unique,
+    list_id    int references lists (id) on delete cascade not null,
+    link_id    int references links (id) on delete cascade not null,
+    link_title varchar                                     not null
 );

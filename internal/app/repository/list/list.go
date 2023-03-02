@@ -20,12 +20,8 @@ func NewListRepository(db *sqlx.DB) *ListRepository {
 func (r *ListRepository) Create(userID int, list models.List) (int, error) {
 	var listID int
 
-	checkIfTitleExistsQuery := fmt.Sprintf("SELECT id FROM %s WHERE user_id=$1 AND list_title=$2",
-		postgres.UsersListsTable)
-
-	err := r.db.Get(&listID, checkIfTitleExistsQuery, userID, list.ShortTitle)
-	if err == nil || listID != 0 {
-		return 0, errors.New("you already use this title")
+	if err := r.CheckIfTitleExists(userID, list.ShortTitle); err != nil {
+		return 0, err
 	}
 
 	tx, err := r.db.Begin()
@@ -56,30 +52,14 @@ func (r *ListRepository) Create(userID int, list models.List) (int, error) {
 }
 
 func (r *ListRepository) GetAll(userID int) ([]models.List, error) {
-	var ids []int
-
-	getIDsQuery := fmt.Sprintf("SELECT list_id FROM %s WHERE user_id=$1",
-		postgres.UsersListsTable)
-
-	if err := r.db.Select(&ids, getIDsQuery, userID); err != nil {
-		return nil, err
-	}
-
 	var lists []models.List
-	var list models.List
+	query := fmt.Sprintf(`SELECT l.id, l.title, l.short_title, l.description FROM %s
+								l INNER JOIN %s ul on l.id = ul.list_id WHERE ul.user_id=$1`,
+		postgres.ListsTable, postgres.UsersListsTable)
 
-	getListByIDQuery := fmt.Sprintf("SELECT id, title, short_title, description FROM %s WHERE id=$1",
-		postgres.ListsTable)
+	err := r.db.Select(&lists, query, userID)
 
-	for _, n := range ids {
-		err := r.db.Get(&list, getListByIDQuery, n)
-		if err != nil {
-			return nil, err
-		}
-		lists = append(lists, list)
-	}
-
-	return lists, nil
+	return lists, err
 }
 
 func (r *ListRepository) GetList(userID int, title string) (models.List, error) {
@@ -170,4 +150,18 @@ func (r *ListRepository) Delete(userID int, title string) (int, error) {
 	}
 
 	return listID, tx.Commit()
+}
+
+func (r *ListRepository) CheckIfTitleExists(userID int, title string) error {
+	var listID int
+
+	checkIfTitleExistsQuery := fmt.Sprintf("SELECT id FROM %s WHERE user_id=$1 AND list_title=$2",
+		postgres.UsersListsTable)
+
+	err := r.db.Get(&listID, checkIfTitleExistsQuery, userID, title)
+	if err == nil || listID != 0 {
+		return errors.New("you already use this title")
+	}
+
+	return nil
 }
